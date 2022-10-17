@@ -542,7 +542,7 @@ namespace Escapist {
 			}
 		}
 		BasicString(const Self& other) {
-			if (other.ref && other.data && other.data) {
+			if (other.ref && other.data && other.size) {
 				::memcpy((void*)this, (const void*)&other, sizeof(Self));
 				if (*ref) {
 					(**ref).IncrementRef();
@@ -754,7 +754,7 @@ namespace Escapist {
 		}
 		Self& Append(const Self& other, const SizeType dataSize) {
 			if (dataSize && !other.IsEmptyOrNull()) {
-				if (data >= other.data) {
+				if (size >= other.size) {
 					return Self::Append(other);
 				}
 				else {

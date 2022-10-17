@@ -102,16 +102,16 @@ namespace EscapistPrivate
 			TypeTrait<T>;
 
 	public:
-		void Copy(T* dest, const T* src, Escapist::SizeType size) {
+		static void Copy(T* dest, const T* src, Escapist::SizeType size) {
 			::memcpy((void*)dest, (const void*)src, size * sizeof(T));
 		}
-		void SafeCopy(T* dest, Escapist::SizeType capacity, const T* src, Escapist::SizeType size) {
+		static void SafeCopy(T* dest, Escapist::SizeType capacity, const T* src, Escapist::SizeType size) {
 			::memcpy_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
 		}
-		void Move(T* dest, const T* src, Escapist::SizeType size) {
+		static void Move(T* dest, const T* src, Escapist::SizeType size) {
 			::memmove((void*)dest, (const void*)src, size * sizeof(T));
 		}
-		void SafeMove(T* dest, Escapist::SizeType capacity, const T* src, Escapist::SizeType size) {
+		static void SafeMove(T* dest, Escapist::SizeType capacity, const T* src, Escapist::SizeType size) {
 			::memmove_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
 		}
 
@@ -171,7 +171,9 @@ namespace EscapistPrivate
 			}
 		}
 
-		static void Assign(T* dest, const T& val) { new(dest)T(val); }
+		static void Assign(T* dest, const T& val) {
+			new(dest)T(val);
+		}
 		static void Fill(T* dest, const T& val, Escapist::SizeType count)
 		{
 			for (; count > 0; --count, ++dest)
@@ -216,7 +218,7 @@ namespace EscapistPrivate
 	struct TypeTraitPatternSelector<T,
 		typename std::enable_if<(TypeTraitPatternDefiner<T>::Pattern == TypeTraitPattern::NonDefault)>::type>
 	{
-		using TypeTrait = 
+		using TypeTrait =
 #ifdef ESCAPIST_HAS_NAMESPACE
 			Escapist::
 #endif // ESCAPIST_HAS_NAMESPACE
