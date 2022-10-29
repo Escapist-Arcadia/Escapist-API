@@ -6,65 +6,57 @@
 #include<cstdlib>
 #include<memory>
 
-#ifdef ESCAPIST_HAS_NAMESPACE
-namespace Escapist
+template<typename T>
+class TypeTrait
 {
-#endif
-
-	template<typename T>
-	class TypeTrait
-	{
-		void Copy(T* dest, const T* src, SizeType size) {
-			::memcpy((void*)dest, (const void*)src, size * sizeof(T));
-		}
-		void SafeCopy(T* dest, SizeType capacity, const T* src, SizeType size) {
-			::memcpy_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
-		}
-		void Move(T* dest, const T* src, SizeType size) {
-			::memmove((void*)dest, (const void*)src, size * sizeof(T));
-		}
-		void SafeMove(T* dest, SizeType capacity, const T* src, SizeType size) {
-			::memmove_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
-		}
-		static void Assign(T* dest, const T& val) {
+	void Copy(T* dest, const T* src, SizeType size) {
+		::memcpy((void*)dest, (const void*)src, size * sizeof(T));
+	}
+	void SafeCopy(T* dest, SizeType capacity, const T* src, SizeType size) {
+		::memcpy_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
+	}
+	void Move(T* dest, const T* src, SizeType size) {
+		::memmove((void*)dest, (const void*)src, size * sizeof(T));
+	}
+	void SafeMove(T* dest, SizeType capacity, const T* src, SizeType size) {
+		::memmove_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
+	}
+	static void Assign(T* dest, const T& val) {
+		::memcpy((void*)dest, (const void*)&val, sizeof(T));
+	}
+	static void Fill(T* dest, const T& val, size_t count) {
+		for (; count > 0; --count, ++dest)
 			::memcpy((void*)dest, (const void*)&val, sizeof(T));
-		}
-		static void Fill(T* dest, const T& val, size_t count) {
-			for (; count > 0; --count, ++dest)
-				::memcpy((void*)dest, (const void*)&val, sizeof(T));
-		}
-		static int Equals(const T& left, const T& right) {
-			if (left == right)
-				return 0;
+	}
+	static int Equals(const T& left, const T& right) {
+		if (left == right)
+			return 0;
+		else
+			if (left < right)
+				return -1;
 			else
-				if (left < right)
-					return -1;
-				else
-					return 1;
-		}
-		static int Compare(const T* left, const T* right, size_t size) {
-			int rtn;
-			for (; !(rtn = TypeTrait<T>::Equals(*left, *right)) && size > 0; ++left, ++right, --size);
-			return rtn;
-		}
+				return 1;
+	}
+	static int Compare(const T* left, const T* right, size_t size) {
+		int rtn;
+		for (; !(rtn = TypeTrait<T>::Equals(*left, *right)) && size > 0; ++left, ++right, --size);
+		return rtn;
+	}
 
-		static size_t GetSize(const T* src) {
-			size_t count(0);
-			while (!TypeTrait<T>::Equals(*src, T()))
-				++count;
-			return count;
-		}
-		static size_t GetCount(const T* src) {
-			return GetSize(src);
-		}
-		static size_t GetLength(const T* src) {
-			return GetSize(src);
-		}
-	};
+	static size_t GetSize(const T* src) {
+		size_t count(0);
+		while (!TypeTrait<T>::Equals(*src, T()))
+			++count;
+		return count;
+	}
+	static size_t GetCount(const T* src) {
+		return GetSize(src);
+	}
+	static size_t GetLength(const T* src) {
+		return GetSize(src);
+	}
+};
 
-#ifdef ESCAPIST_HAS_NAMESPACE
-}
-#endif
 
 namespace EscapistPrivate
 {
@@ -91,27 +83,27 @@ namespace EscapistPrivate
 	template<typename T>
 	class PodTypeTrait :public
 #ifdef ESCAPIST_HAS_NAMESPACE
-		Escapist::
+		
 #endif
 		TypeTrait<T>
 	{
 		using Base = typename
 #ifdef ESCAPIST_HAS_NAMESPACE
-			Escapist::
+			
 #endif
 			TypeTrait<T>;
 
 	public:
-		static void Copy(T* dest, const T* src, Escapist::SizeType size) {
+		static void Copy(T* dest, const T* src, SizeType size) {
 			::memcpy((void*)dest, (const void*)src, size * sizeof(T));
 		}
-		static void SafeCopy(T* dest, Escapist::SizeType capacity, const T* src, Escapist::SizeType size) {
+		static void SafeCopy(T* dest, SizeType capacity, const T* src, SizeType size) {
 			::memcpy_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
 		}
-		static void Move(T* dest, const T* src, Escapist::SizeType size) {
+		static void Move(T* dest, const T* src, SizeType size) {
 			::memmove((void*)dest, (const void*)src, size * sizeof(T));
 		}
-		static void SafeMove(T* dest, Escapist::SizeType capacity, const T* src, Escapist::SizeType size) {
+		static void SafeMove(T* dest, SizeType capacity, const T* src, SizeType size) {
 			::memmove_s((void* const)dest, capacity * sizeof(T), (const void* const)src, size * sizeof(T));
 		}
 
@@ -126,7 +118,7 @@ namespace EscapistPrivate
 		static int Equals(const T& left, const T& right) {
 			return Base::Equals(left, right);
 		}
-		static int Compare(const T* left, const T* right, Escapist::SizeType size) {
+		static int Compare(const T* left, const T* right, SizeType size) {
 			return Base::Compare(left, right, size);
 		}
 
@@ -141,20 +133,21 @@ namespace EscapistPrivate
 		}
 
 		static void Destroy(T* ptr) {}
-	};
+		static void Destroy(T* ptr, SizeType count) {}
+};
 
 	template<typename T>
-	class GenericTypeTrait :public Escapist::TypeTrait<T>
+	class GenericTypeTrait :public TypeTrait<T>
 	{
-		using Base = typename Escapist::TypeTrait<T>;
+		using Base = typename TypeTrait<T>;
 
 	public:
-		static void Copy(T* dest, const T* src, Escapist::SizeType size)
+		static void Copy(T* dest, const T* src, SizeType size)
 		{
 			for (; size > 0; ++dest, ++src)
 				new(dest)T(*src);
 		}
-		static void Move(T* dest, const T* src, Escapist::SizeType size)
+		static void Move(T* dest, const T* src, SizeType size)
 		{
 			if (dest <= src || dest >= (src + size))
 			{
@@ -174,21 +167,21 @@ namespace EscapistPrivate
 		static void Assign(T* dest, const T& val) {
 			new(dest)T(val);
 		}
-		static void Fill(T* dest, const T& val, Escapist::SizeType count)
+		static void Fill(T* dest, const T& val, SizeType count)
 		{
 			for (; count > 0; --count, ++dest)
 				new(dest)T(val);
 		}
 
 		static int Equals(const T& left, const T& right) { return Base::Equals(left, right); }
-		static int Compare(const T* left, const T* right, Escapist::SizeType size) { return Base::Compare(left, right, size); }
+		static int Compare(const T* left, const T* right, SizeType size) { return Base::Compare(left, right, size); }
 
 		static size_t GetSize(const T* src) { return Base::GetSize(src); }
 		static size_t GetCount(const T* src) { return Base::GetCount(src); }
 		static size_t GetLength(const T* src) { return Base::GetLength(src); }
 
 		static void Destroy(T* ptr) { ptr->~T(); }
-		static void Destroy(T* ptr, Escapist::SizeType count) {
+		static void Destroy(T* ptr, SizeType count) {
 			for (; count > 0; ++ptr, --count)
 				ptr->~T();
 		}
@@ -220,7 +213,7 @@ namespace EscapistPrivate
 	{
 		using TypeTrait =
 #ifdef ESCAPIST_HAS_NAMESPACE
-			Escapist::
+			
 #endif // ESCAPIST_HAS_NAMESPACE
 			TypeTrait<T>;
 	};
